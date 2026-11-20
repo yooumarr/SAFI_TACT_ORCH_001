@@ -54,18 +54,3 @@ Stop services with `docker compose down` (keeps volumes); remove stack data with
 - Windmill: `http://localhost:8000`; use the official first-login/setup flow. Keep all admin access local-only.
 
 These are local prototype services. JetStream holds prototype gate control/action events in the `ORCH_CONTROL` stream; it is not SAFI History and does not use SAFI Subject names. No n8n workflow has been imported into this fresh n8n instance yet. Windmill flow definitions were imported to the local Admins workspace, but the assignment run endpoint still needs verification. No Calnode test event type or booking has been configured.
-
-## Limitations and next integration steps
-
-1. This working directory is not yet a Git repository. Obtain the assigned SAFI Git repository (or explicit confirmation to initialize/use a separate repo) and confirm the allowed integration point; record an exact commit SHA only after committing within the authorized repo.
-2. Integrate SafiChat actor identity, ConversationID, permissions, full historical Meeting/Port Context, Subject Line display value, and current permission provenance using actual SAFI contracts.
-3. Connect to the SAFI-provided NATS/JetStream account and write control/action events to existing History without changing Subject naming; local JSON state must remain operational/recoverable state only. The local NATS container is for isolated development and is not a substitute for SAFI History.
-4. n8n and Windmill local test workflows are exported in `workflows/`; Calnode test setup is recorded in `workflows/calnode-test-config.json`. Verify every external effect remains behind the shared dispatcher and use only local/synthetic recipients.
-5. Add actual workflow exports and Calnode test configuration using approved credentials and consenting test recipients; verify retries and downstream idempotency.
-6. Implement reconciliation semantics for in-flight actions and mode transitions against real adapters and authoritative history.
-7. Run and record each in-scope SOW test with timestamps, conversation IDs, job/booking IDs, redacted evidence, and exact commit SHA. A missing test is not PASS.
-8. See `USER_GUIDE.md` for the one-page standalone-prototype guide; review it with the assessor and update if the accepted scope changes.
-
-## SOW test status
-
-All mandatory SOW tests A01–A12 are **BLOCKED** in this environment because their required services, accounts, credentials, calendar, and SafiChat integration are unavailable. The Node.js unit tests exercise prototype behavior only and do not change those statuses.
