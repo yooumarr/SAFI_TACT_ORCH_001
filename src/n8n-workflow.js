@@ -41,12 +41,27 @@ export const marketingWorkflow = {
       position: [740, 220],
     },
     {
-      parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify({ status: $json.status, leadId: $json.leadId, conversationId: $json.conversationId, operationId: $json.operationId, executionId: $execution.id }) }}', options: {} },
+      parameters: {
+        method: 'POST',
+        url: 'http://mailpit:8025/api/v1/send',
+        sendBody: true,
+        specifyBody: 'json',
+        jsonBody: '={{ { From: { Email: "orchestration@example.invalid", Name: "Safi Test" }, To: [{ Email: $("Consented lead intake").first().json.body.action.payload.recipient, Name: $("Consented lead intake").first().json.body.action.payload.lead?.name ?? "Test lead" }], Subject: $("Consented lead intake").first().json.body.action.payload.subject ?? "Your inquiry follow-up", Text: $("Consented lead intake").first().json.body.action.payload.message ?? "Thanks for your test inquiry." } }}',
+        options: { timeout: 10000 },
+      },
+      id: 'capture-test-follow-up',
+      name: 'Capture follow-up in local Mailpit',
+      type: 'n8n-nodes-base.httpRequest',
+      typeVersion: 4.2,
+      position: [980, 220],
+    },
+    {
+      parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify({ status: $json.status ?? "captured", leadId: $("Consented lead intake").first().json.body.action.payload.lead?.id ?? "test-lead", conversationId: $("Consented lead intake").first().json.body.action.conversationId, operationId: $("Consented lead intake").first().json.body.action.operationId, executionId: $execution.id, mailbox: "Mailpit" }) }}', options: {} },
       id: 'report-test-execution',
       name: 'Report test execution',
       type: 'n8n-nodes-base.respondToWebhook',
       typeVersion: 1.1,
-      position: [980, 220],
+      position: [1220, 220],
     },
     {
       parameters: {
@@ -64,7 +79,8 @@ export const marketingWorkflow = {
   connections: {
     'Consented lead intake': { main: [[{ node: 'Require explicit consent and allowlist', type: 'main', index: 0 }]] },
         'Require explicit consent and allowlist': { main: [[{ node: 'Prepare approved follow-up', type: 'main', index: 0 }], [{ node: 'Reject without contact', type: 'main', index: 0 }]] },
-        'Prepare approved follow-up': { main: [[{ node: 'Report test execution', type: 'main', index: 0 }]] },
+        'Prepare approved follow-up': { main: [[{ node: 'Capture follow-up in local Mailpit', type: 'main', index: 0 }]] },
+    'Capture follow-up in local Mailpit': { main: [[{ node: 'Report test execution', type: 'main', index: 0 }]] },
     'Reject without contact': { main: [[{ node: 'Report test execution', type: 'main', index: 0 }]] },
   },
   active: false,
