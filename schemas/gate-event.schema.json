@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://safi.example/schemas/gate-event.schema.json",
+  "title": "Safi Gate Action Event",
+  "type": "object",
+  "required": ["eventType", "operationId", "conversationId", "subjectLine", "actorGuid", "actorType", "meetingContext", "portContext", "permissionProvenance", "operation", "idempotencyKey", "correlationId", "status", "createdAt"],
+  "properties": {
+    "eventType": { "type": "string", "enum": ["action.held", "action.approved", "action.rejected", "action.cancelled", "action.completed", "action.uncertain", "action.dispatching", "mode.changed"] },
+    "operationId": { "type": "string", "format": "uuid" },
+    "conversationId": { "type": "string", "minLength": 1 },
+    "subjectLine": { "type": "string" },
+    "actorGuid": { "type": "string", "format": "uuid" },
+    "actorType": { "type": "string", "enum": ["user", "proxy"] },
+    "meetingContext": {},
+    "portContext": {},
+    "permissionProvenance": {},
+    "operation": { "type": "string", "enum": ["marketing.follow_up", "sales.book_appointment", "operations.assign_task", "customer.update", "notification.send"] },
+    "payload": { "type": "object" },
+    "idempotencyKey": { "type": "string", "minLength": 1 },
+    "correlationId": { "type": "string" },
+    "status": { "type": "string", "enum": ["held", "dispatching", "completed", "cancelled", "rejected", "uncertain"] },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "outcome": {},
+    "error": { "type": "string" }
+  },
+  "additionalProperties": true
+}

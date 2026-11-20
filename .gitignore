@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+data/
+node_modules/
+*.tmp
+SAFI_TACT_ORCH_001_Local_Business_Orchestration_Gated_Ungated_2026-11-16.docx

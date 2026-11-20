@@ -1,0 +1,75 @@
+export const marketingWorkflow = {
+  name: 'Safi Consent-Gated Marketing Follow-up',
+  nodes: [
+    {
+      parameters: { httpMethod: 'POST', path: 'safi/marketing-intake', responseMode: 'responseNode', options: {} },
+      id: 'marketing-intake-webhook',
+      name: 'Consented lead intake',
+      type: 'n8n-nodes-base.webhook',
+      typeVersion: 2,
+      position: [240, 300],
+      webhookId: 'safi-marketing-intake',
+    },
+    {
+      parameters: {
+        conditions: {
+          options: { caseSensitive: true, typeValidation: 'strict', version: 2 },
+          conditions: [
+            { id: 'consent-check', leftValue: '={{ $json.body.action.payload.consent }}', rightValue: true, operator: { type: 'boolean', operation: 'true', singleValue: true } },
+            { id: 'allowlist-check', leftValue: '={{ $json.body.action.payload.allowlisted }}', rightValue: true, operator: { type: 'boolean', operation: 'true', singleValue: true } },
+          ],
+          combinator: 'and',
+        },
+        options: {},
+      },
+      id: 'require-consent-and-allowlist',
+      name: 'Require explicit consent and allowlist',
+      type: 'n8n-nodes-base.if',
+      typeVersion: 2.2,
+      position: [480, 300],
+    },
+    {
+      parameters: {
+        jsCode: 'const action = $input.first().json.body.action; return [{ json: { status: "prepared", leadId: action.payload.lead?.id ?? "test-lead", conversationId: action.conversationId, operationId: action.operationId } }];',
+        mode: 'runOnceForAllItems',
+        options: {},
+      },
+      id: 'prepare-consented-follow-up',
+      name: 'Prepare approved follow-up',
+      type: 'n8n-nodes-base.code',
+      typeVersion: 2,
+      position: [740, 220],
+    },
+    {
+      parameters: { respondWith: 'json', responseBody: '={{ JSON.stringify({ status: $json.status, leadId: $json.leadId, conversationId: $json.conversationId, operationId: $json.operationId, executionId: $execution.id }) }}', options: {} },
+      id: 'report-test-execution',
+      name: 'Report test execution',
+      type: 'n8n-nodes-base.respondToWebhook',
+      typeVersion: 1.1,
+      position: [980, 220],
+    },
+    {
+      parameters: {
+        jsCode: 'return [{ json: { status: "blocked", reason: "consent and allowlist are required" } }];',
+        mode: 'runOnceForAllItems',
+        options: {},
+      },
+      id: 'reject-unconsented',
+      name: 'Reject without contact',
+      type: 'n8n-nodes-base.code',
+      typeVersion: 2,
+      position: [740, 420],
+    },
+  ],
+  connections: {
+    'Consented lead intake': { main: [[{ node: 'Require explicit consent and allowlist', type: 'main', index: 0 }]] },
+        'Require explicit consent and allowlist': { main: [[{ node: 'Prepare approved follow-up', type: 'main', index: 0 }], [{ node: 'Reject without contact', type: 'main', index: 0 }]] },
+        'Prepare approved follow-up': { main: [[{ node: 'Report test execution', type: 'main', index: 0 }]] },
+    'Reject without contact': { main: [[{ node: 'Report test execution', type: 'main', index: 0 }]] },
+  },
+  active: false,
+  settings: { executionOrder: 'v1', callerPolicy: 'workflowsFromSameOwner' },
+  pinData: {},
+  meta: { templateCredsSetupCompleted: true },
+  tags: [],
+};

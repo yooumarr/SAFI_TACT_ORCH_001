@@ -1,0 +1,18 @@
+﻿{
+  "service": "Calnode",
+  "image": "ghcr.io/calnode/calnode:0.14.0",
+  "baseUrl": "http://localhost:3000",
+  "apiKey": "stored locally in .env; deliberately omitted here",
+  "eventType": {
+    "slug": "test-intro-call",
+    "name": "Test Intro Call",
+    "durationMinutes": 30,
+    "slotIntervalMinutes": 30,
+    "maxFutureDays": 60,
+    "maxActiveBookings": 0,
+    "testRecipient": "pilot@example.invalid"
+  },
+  "bookingApi": "POST /v1/bookings",
+  "slotsApi": "GET /v1/event-types/test-intro-call/slots",
+  "safety": "Use only the reserved .invalid recipient for local synthetic tests."
+}

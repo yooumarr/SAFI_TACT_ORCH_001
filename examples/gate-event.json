@@ -1,0 +1,17 @@
+{
+  "eventType": "action.held",
+  "operationId": "7ecf1f82-c736-4cb5-b31c-467098816408",
+  "conversationId": "test-conversation-a",
+  "subjectLine": "Consented sample lead",
+  "actorGuid": "f607f7aa-e8cf-49f5-90d0-7e0b67f39098",
+  "actorType": "user",
+  "meetingContext": { "meetingId": "test-meeting-1", "source": "local-fixture" },
+  "portContext": { "portId": "test-port-1", "source": "local-fixture" },
+  "permissionProvenance": { "role": "test-operator", "revision": "fixture" },
+  "operation": "marketing.follow_up",
+  "payload": { "recipient": "allowlisted-test-contact", "template": "approved-test-follow-up" },
+  "idempotencyKey": "test-conversation-a:lead-1:follow-up-v1",
+  "correlationId": "test-correlation-1",
+  "status": "held",
+  "createdAt": "2026-11-18T00:00:00.000Z"
+}

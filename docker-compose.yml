@@ -1,0 +1,146 @@
+name: safi-local-orchestration
+services:
+  mailpit:
+    image: axllent/mailpit:v1.27.8
+    ports:
+      - "127.0.0.1:8025:8025"
+    restart: unless-stopped
+
+  nats:
+    image: nats:2.15.3-alpine
+    command: ["-js", "-sd", "/data", "-m", "8222"]
+    ports:
+      - "127.0.0.1:4222:4222"
+      - "127.0.0.1:8222:8222"
+    networks:
+      default:
+        aliases:
+          - nats
+    volumes:
+      - nats_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  n8n:
+    image: n8nio/n8n:2.48.4
+    ports:
+      - "127.0.0.1:5678:5678"
+    environment:
+      GENERIC_TIMEZONE: ${GENERIC_TIMEZONE:-Asia/Kolkata}
+      TZ: ${GENERIC_TIMEZONE:-Asia/Kolkata}
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      N8N_PUBLIC_API_DISABLED: "false"
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      N8N_BLOCK_FILE_ACCESS_TO_N8N_FILES: "true"
+      N8N_EMAIL_MODE: smtp
+      N8N_SMTP_HOST: mailpit
+      N8N_SMTP_PORT: "1025"
+      N8N_SMTP_SENDER: "Orchestration Test <test@example.invalid>"
+      N8N_SMTP_SSL: "false"
+    depends_on:
+      - mailpit
+    volumes:
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+  calnode:
+    image: ghcr.io/calnode/calnode:0.14.0
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      BASE_URL: http://localhost:3000
+      PORT: "3000"
+      DATABASE_URL: sqlite:///data/calnode.db
+    volumes:
+      - calnode_data:/data
+    restart: unless-stopped
+
+  windmill-db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: windmill
+      POSTGRES_USER: windmill
+      POSTGRES_PASSWORD: ${WINDMILL_DB_PASSWORD:?Set WINDMILL_DB_PASSWORD in .env}
+    volumes:
+      - windmill_db_data:/var/lib/postgresql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U windmill -d windmill"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  windmill-server:
+    image: ghcr.io/windmill-labs/windmill:1.876.1
+    environment:
+      DATABASE_URL: postgres://windmill:${WINDMILL_DB_PASSWORD:?Set WINDMILL_DB_PASSWORD in .env}@windmill-db/windmill?sslmode=disable
+      MODE: server
+      DISABLE_NSJAIL: "true"
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      windmill-db:
+        condition: service_healthy
+    volumes:
+      - windmill_logs:/tmp/windmill/logs
+    restart: unless-stopped
+
+  windmill-worker:
+    image: ghcr.io/windmill-labs/windmill:1.876.1
+    environment:
+      DATABASE_URL: postgres://windmill:${WINDMILL_DB_PASSWORD:?Set WINDMILL_DB_PASSWORD in .env}@windmill-db/windmill?sslmode=disable
+      MODE: worker
+      WORKER_GROUP: default
+      DISABLE_NSJAIL: "true"
+      NATS_URL: nats://nats:4222
+    depends_on:
+      windmill-db:
+        condition: service_healthy
+      windmill-server:
+        condition: service_started
+    volumes:
+      - windmill_worker_cache:/tmp/windmill/cache
+      - windmill_logs:/tmp/windmill/logs
+    restart: unless-stopped
+
+  gate:
+    build: .
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      PORT: "8787"
+      GATE_STATE_PATH: /data/gate-state.json
+      GATE_API_TOKEN: ${GATE_API_TOKEN:?Set GATE_API_TOKEN in .env}
+      NATS_URL: nats://nats:4222
+      GATE_ACTORS_JSON: ${GATE_ACTORS_JSON:-{}}
+      DISPATCH_URL: ${DISPATCH_URL:-}
+      N8N_API_KEY: ${N8N_API_KEY:-}
+      N8N_MARKETING_WORKFLOW_ID: ${N8N_MARKETING_WORKFLOW_ID:-}
+      WINDMILL_TOKEN: ${WINDMILL_TOKEN:-}
+      WINDMILL_WORKSPACE: ${WINDMILL_WORKSPACE:-admins}
+      WINDMILL_ASSIGNMENT_FLOW: ${WINDMILL_ASSIGNMENT_FLOW:-f/f/orchestration/assign_task}
+      CALNODE_API_KEY: ${CALNODE_API_KEY:-}
+    depends_on:
+      nats:
+        condition: service_healthy
+    volumes:
+      - gate_data:/data
+    restart: unless-stopped
+
+volumes:
+  nats_data:
+  n8n_data:
+  calnode_data:
+  windmill_db_data:
+  windmill_worker_cache:
+  windmill_logs:
+  gate_data:

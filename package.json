@@ -1,0 +1,17 @@
+{
+  "name": "safi-local-orchestration-gate",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local prototype of the per-conversation gated business orchestration dispatcher.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "nats": "^2.29.3"
+  }
+}

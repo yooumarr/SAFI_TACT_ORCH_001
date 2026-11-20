@@ -1,0 +1,32 @@
+export const ASSIGNMENT_FLOW_PATH = 'orchestration/assign_task';
+
+export const assignmentFlow = {
+  summary: 'Assign a consented test customer follow-up task',
+  description: 'Runs only after an action has passed the shared dispatcher. This flow does not directly notify external recipients.',
+  schema: {
+    type: 'object',
+    required: ['operationId', 'conversationId', 'task'],
+    properties: {
+      operationId: { type: 'string' },
+      conversationId: { type: 'string' },
+      task: { type: 'object' },
+    },
+  },
+  value: {
+    modules: [
+      {
+        id: 'assign_task',
+        summary: 'Run validated test task assignment',
+        value: {
+          type: 'script',
+          path: 'f/orchestration/assign_task_script',
+          input_transforms: {
+            operationId: { type: 'javascript', expr: 'flow_input.operationId' },
+            conversationId: { type: 'javascript', expr: 'flow_input.conversationId' },
+            task: { type: 'javascript', expr: 'flow_input.task' },
+          },
+        },
+      },
+    ],
+  },
+};

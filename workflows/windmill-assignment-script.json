@@ -1,0 +1,8 @@
+{
+  "summary": "Validate and complete an allowlisted test task assignment",
+  "description": "Returns an assigned test task result without sending an external notification.",
+  "content": "export async function main(operationId: string, conversationId: string, task: Record<string, unknown>) {\n  if (!operationId || !conversationId) throw new Error('operationId and conversationId are required');\n  if (task.allowlisted !== true || task.testOnly !== true) throw new Error('Only allowlisted test task assignments are enabled');\n  const assignee = typeof task.assignee === 'string' && task.assignee.trim() ? task.assignee.trim() : 'test-operator';\n  const title = typeof task.title === 'string' && task.title.trim() ? task.title.trim() : 'Follow up on test customer inquiry';\n  return {\n    operationId,\n    conversationId,\n    taskId: 'task-' + operationId,\n    title,\n    assignee,\n    status: 'completed',\n    completedAt: new Date().toISOString(),\n    externalNotifications: 'disabled',\n  };\n}",
+  "language": "bun",
+  "kind": "script",
+  "path": "p/orchestration/assign_task_script"
+}
