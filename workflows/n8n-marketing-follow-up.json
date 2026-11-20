@@ -2,23 +2,17 @@
   "id": "4NMRgkCbcWknHbnM",
   "name": "Safi Consent-Gated Marketing Follow-up",
   "description": null,
-  "active": false,
-  "activeVersionId": "6be4efd1-f9f2-4273-ba1f-4b5b39339b06",
+  "active": true,
+  "activeVersionId": "0f2055bc-4aff-4431-9687-ff55e7db1384",
   "createdAt": "2026-11-19T16:59:49.588Z",
-  "updatedAt": "2026-11-20T09:04:00.534Z",
+  "updatedAt": "2026-11-20T10:28:15.310Z",
   "isArchived": false,
-  "versionId": "6be4efd1-f9f2-4273-ba1f-4b5b39339b06",
-  "versionCounter": 14,
+  "versionId": "0f2055bc-4aff-4431-9687-ff55e7db1384",
+  "versionCounter": 15,
   "sourceWorkflowId": null,
   "triggerCount": 1,
   "nodes": [
     {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "safi/marketing-intake",
-        "responseMode": "responseNode",
-        "options": {}
-      },
       "id": "marketing-intake-webhook",
       "name": "Consented lead intake",
       "webhookId": "safi-marketing-intake",
@@ -27,9 +21,23 @@
       "position": [
         240,
         304
-      ]
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "safi/marketing-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      }
     },
     {
+      "id": "require-consent-and-allowlist",
+      "name": "Require explicit consent and allowlist",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        304
+      ],
       "parameters": {
         "conditions": {
           "options": {
@@ -63,20 +71,9 @@
           "combinator": "and"
         },
         "options": {}
-      },
-      "id": "require-consent-and-allowlist",
-      "name": "Require explicit consent and allowlist",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        480,
-        304
-      ]
+      }
     },
     {
-      "parameters": {
-        "jsCode": "const action = $input.first().json.body.action; return [{ json: { status: \"prepared\", leadId: action.payload.lead?.id ?? \"test-lead\", conversationId: action.conversationId, operationId: action.operationId } }];"
-      },
       "id": "prepare-consented-follow-up",
       "name": "Prepare approved follow-up",
       "type": "n8n-nodes-base.code",
@@ -84,27 +81,27 @@
       "position": [
         960,
         224
-      ]
+      ],
+      "parameters": {
+        "jsCode": "const action = $input.first().json.body.action; return [{ json: { status: \"prepared\", leadId: action.payload.lead?.id ?? \"test-lead\", conversationId: action.conversationId, operationId: action.operationId } }];"
+      }
     },
     {
-      "parameters": {
-        "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ status: $json.status ?? \"captured\", leadId: $(\"Consented lead intake\").first().json.body.action.payload.lead?.id ?? \"test-lead\", conversationId: $(\"Consented lead intake\").first().json.body.action.conversationId, operationId: $(\"Consented lead intake\").first().json.body.action.operationId, executionId: $execution.id, mailbox: \"Mailpit\" }) }}",
-        "options": {}
-      },
       "id": "report-test-execution",
       "name": "Report test execution",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
         1440,
-        224
-      ]
+        220
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: $json.status ?? \"captured\", leadId: $(\"Consented lead intake\").first().json.body.action.payload.lead?.id ?? \"test-lead\", conversationId: $(\"Consented lead intake\").first().json.body.action.conversationId, operationId: $(\"Consented lead intake\").first().json.body.action.operationId, executionId: $execution.id, mailbox: \"Mailpit\" }) }}",
+        "options": {}
+      }
     },
     {
-      "parameters": {
-        "jsCode": "return [{ json: { status: \"blocked\", reason: \"consent and allowlist are required\" } }];"
-      },
       "id": "reject-unconsented",
       "name": "Reject without contact",
       "type": "n8n-nodes-base.code",
@@ -112,9 +109,20 @@
       "position": [
         960,
         416
-      ]
+      ],
+      "parameters": {
+        "jsCode": "return [{ json: { status: \"blocked\", reason: \"consent and allowlist are required\" } }];"
+      }
     },
     {
+      "id": "capture-test-follow-up",
+      "name": "Capture follow-up in local Mailpit",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        220
+      ],
       "parameters": {
         "method": "POST",
         "url": "http://mailpit:8025/api/v1/send",
@@ -124,15 +132,7 @@
         "options": {
           "timeout": 10000
         }
-      },
-      "id": "capture-test-follow-up",
-      "name": "Capture follow-up in local Mailpit",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        1220,
-        224
-      ]
+      }
     }
   ],
   "connections": {
@@ -230,16 +230,10 @@
     }
   ],
   "activeVersion": {
-    "versionId": "6be4efd1-f9f2-4273-ba1f-4b5b39339b06",
+    "versionId": "0f2055bc-4aff-4431-9687-ff55e7db1384",
     "workflowId": "4NMRgkCbcWknHbnM",
     "nodes": [
       {
-        "parameters": {
-          "httpMethod": "POST",
-          "path": "safi/marketing-intake",
-          "responseMode": "responseNode",
-          "options": {}
-        },
         "id": "marketing-intake-webhook",
         "name": "Consented lead intake",
         "webhookId": "safi-marketing-intake",
@@ -248,9 +242,23 @@
         "position": [
           240,
           304
-        ]
+        ],
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "safi/marketing-intake",
+          "responseMode": "responseNode",
+          "options": {}
+        }
       },
       {
+        "id": "require-consent-and-allowlist",
+        "name": "Require explicit consent and allowlist",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          480,
+          304
+        ],
         "parameters": {
           "conditions": {
             "options": {
@@ -284,20 +292,9 @@
             "combinator": "and"
           },
           "options": {}
-        },
-        "id": "require-consent-and-allowlist",
-        "name": "Require explicit consent and allowlist",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.2,
-        "position": [
-          480,
-          304
-        ]
+        }
       },
       {
-        "parameters": {
-          "jsCode": "const action = $input.first().json.body.action; return [{ json: { status: \"prepared\", leadId: action.payload.lead?.id ?? \"test-lead\", conversationId: action.conversationId, operationId: action.operationId } }];"
-        },
         "id": "prepare-consented-follow-up",
         "name": "Prepare approved follow-up",
         "type": "n8n-nodes-base.code",
@@ -305,27 +302,27 @@
         "position": [
           960,
           224
-        ]
+        ],
+        "parameters": {
+          "jsCode": "const action = $input.first().json.body.action; return [{ json: { status: \"prepared\", leadId: action.payload.lead?.id ?? \"test-lead\", conversationId: action.conversationId, operationId: action.operationId } }];"
+        }
       },
       {
-        "parameters": {
-          "respondWith": "json",
-          "responseBody": "={{ JSON.stringify({ status: $json.status, leadId: $json.leadId, conversationId: $json.conversationId, operationId: $json.operationId, executionId: $execution.id }) }}",
-          "options": {}
-        },
         "id": "report-test-execution",
         "name": "Report test execution",
         "type": "n8n-nodes-base.respondToWebhook",
         "typeVersion": 1.1,
         "position": [
-          1424,
-          224
-        ]
+          1440,
+          220
+        ],
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ JSON.stringify({ status: $json.status ?? \"captured\", leadId: $(\"Consented lead intake\").first().json.body.action.payload.lead?.id ?? \"test-lead\", conversationId: $(\"Consented lead intake\").first().json.body.action.conversationId, operationId: $(\"Consented lead intake\").first().json.body.action.operationId, executionId: $execution.id, mailbox: \"Mailpit\" }) }}",
+          "options": {}
+        }
       },
       {
-        "parameters": {
-          "jsCode": "return [{ json: { status: \"blocked\", reason: \"consent and allowlist are required\" } }];"
-        },
         "id": "reject-unconsented",
         "name": "Reject without contact",
         "type": "n8n-nodes-base.code",
@@ -333,7 +330,30 @@
         "position": [
           960,
           416
-        ]
+        ],
+        "parameters": {
+          "jsCode": "return [{ json: { status: \"blocked\", reason: \"consent and allowlist are required\" } }];"
+        }
+      },
+      {
+        "id": "capture-test-follow-up",
+        "name": "Capture follow-up in local Mailpit",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1220,
+          220
+        ],
+        "parameters": {
+          "method": "POST",
+          "url": "http://mailpit:8025/api/v1/send",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ { From: { Email: \"orchestration@example.invalid\", Name: \"Safi Test\" }, To: [{ Email: $(\"Consented lead intake\").first().json.body.action.payload.recipient, Name: $(\"Consented lead intake\").first().json.body.action.payload.lead?.name ?? \"Test lead\" }], Subject: $(\"Consented lead intake\").first().json.body.action.payload.subject ?? \"Your inquiry follow-up\", Text: $(\"Consented lead intake\").first().json.body.action.payload.message ?? \"Thanks for your test inquiry.\" } }}",
+          "options": {
+            "timeout": 10000
+          }
+        }
       }
     ],
     "connections": {
@@ -370,7 +390,7 @@
         "main": [
           [
             {
-              "node": "Report test execution",
+              "node": "Capture follow-up in local Mailpit",
               "type": "main",
               "index": 0
             }
@@ -387,23 +407,34 @@
             }
           ]
         ]
+      },
+      "Capture follow-up in local Mailpit": {
+        "main": [
+          [
+            {
+              "node": "Report test execution",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "nodeGroups": [],
     "authors": "Local Test",
-    "name": "Version 6be4efd1",
-    "description": "",
-    "autosaved": true,
-    "createdAt": "2026-11-20T09:04:00.536Z",
-    "updatedAt": "2026-11-20T09:04:50.000Z",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "createdAt": "2026-11-20T10:28:15.328Z",
+    "updatedAt": "2026-11-20T10:28:15.328Z",
     "workflowPublishHistory": [
       {
-        "id": 13,
+        "id": 19,
         "workflowId": "4NMRgkCbcWknHbnM",
-        "versionId": "6be4efd1-f9f2-4273-ba1f-4b5b39339b06",
+        "versionId": "0f2055bc-4aff-4431-9687-ff55e7db1384",
         "event": "activated",
         "userId": "4fcf1a34-8b81-4a03-bece-5164c24fdbff",
-        "createdAt": "2026-11-20T09:04:50.405Z"
+        "createdAt": "2026-11-20T10:28:15.689Z"
       }
     ]
   },
